@@ -1,5 +1,5 @@
-import { gameReducer } from './game/reducers'
-import {combineReducers, createStore} from 'redux';
+import {gameReducer} from './game'
+import {combineReducers, configureStore} from '@reduxjs/toolkit'
 
 const rootReducer = combineReducers({
   game: gameReducer
@@ -7,4 +7,7 @@ const rootReducer = combineReducers({
 
 export type RootState = ReturnType<typeof rootReducer>
 
-export const store = createStore(rootReducer);
+export const store = configureStore({
+  reducer: rootReducer,
+  middleware: []
+});
