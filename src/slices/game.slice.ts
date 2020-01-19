@@ -13,7 +13,7 @@ export interface Wolf {
   pos: Position
 }
 
-const gameSlice = createSlice({
+const slice = createSlice({
   name: 'game',
   initialState: {
     wolves: [] as Wolf[],
@@ -26,6 +26,6 @@ const gameSlice = createSlice({
   }
 })
 
-const { actions, reducer } = gameSlice
+const { actions, reducer } = slice
 export const { moveWolf } = actions
 export { reducer as gameReducer }
