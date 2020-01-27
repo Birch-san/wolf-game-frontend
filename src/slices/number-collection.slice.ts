@@ -33,7 +33,6 @@ const slice = createSlice({
   extraReducers: {
     // [actionIdsTk.GET_NUMBER_REQUEST_COMPLETED.type]: (state, action) => [...state, action.payload]
     [actionIds.GET_NUMBER_REQUEST_COMPLETED]: (state, action: PayloadAction<number>) => {
-      console.debug('gfgf')
       return [...state, action.payload]
     }
   }
