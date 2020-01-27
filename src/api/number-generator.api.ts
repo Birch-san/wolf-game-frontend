@@ -1,3 +1,5 @@
+import {Grid} from "../slices";
+
 let initialNumber = 0;
 
 export const generateNewNumber = (): Promise<number> =>

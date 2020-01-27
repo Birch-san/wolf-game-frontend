@@ -30,4 +30,4 @@ export const store = configureStore({
 // const sagaActionCreator = (type: SagaTypes) => store.dispatch({type})
 // const sagaAction = sagaActionCreator('INCREMENT')
 
-sagaMiddleware.run(rootSaga);
+sagaMiddleware.run(rootSaga, 1500);

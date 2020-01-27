@@ -7,10 +7,9 @@ import './index.css';
 import * as serviceWorker from './serviceWorker';
 import {store} from "./store";
 import {NumberSetterComponent, NumberViewerComponent} from './components';
-import {numberRequestStartAction} from "./slices";
+import {getGridStartAction} from "./slices";
 
-setInterval(() => store.dispatch(numberRequestStartAction()), 1500);
-
+store.dispatch(getGridStartAction())
 
 ReactDOM.render(
   <Provider store={store}>
