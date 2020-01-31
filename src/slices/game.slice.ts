@@ -1,5 +1,6 @@
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {Namespacer} from "./Namespacer";
+import {Dictionary} from "../common/types";
 
 export interface Position {
   y: number
@@ -38,7 +39,8 @@ export type GetGridResponse
   = Grid;
 
 export interface World {
-
+  wolves: Dictionary<Wolf>
+  hunters: Dictionary<Hunter>
 }
 
 export type GetWorldResponse
@@ -48,8 +50,10 @@ const slice = createSlice({
   name: namespace,
   initialState: {
     grid: [[]] as Grid,
-    wolves: [] as Wolf[],
-    hunters: [] as Hunter[],
+    world: {
+      wolves: {},
+      hunters: {},
+    } as World,
   },
   reducers: {},
   extraReducers: {
@@ -62,6 +66,7 @@ const slice = createSlice({
     [actionIds.getWorldEnd]: (state, action: PayloadAction<GetWorldResponse>) => {
       return {
         ...state,
+        world: action.payload
       };
     }
   }
