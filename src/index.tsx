@@ -6,18 +6,14 @@ import {Provider} from 'react-redux';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
 import {store} from "./store";
-import {NumberSetterComponent, NumberViewerComponent} from './components';
 import {getGridStartAction} from "./slices";
+import {App} from "./components";
 
 store.dispatch(getGridStartAction())
 
 ReactDOM.render(
   <Provider store={store}>
-    {/*<App />*/}
-    <>
-      <NumberSetterComponent />
-      <NumberViewerComponent />
-    </>
+    <App/>
   </Provider>,
   document.getElementById('root'));
 

@@ -1,10 +1,6 @@
-import {call, put, takeLatest} from 'redux-saga/effects';
-import {getGrid} from '../api';
-// import { numberRequestCompletedAction } from '../actions';
-// import { actionIds } from '../common';
-import {gameActionIds, getGridEndAction} from "../slices";
-
-// import {actionIds} from "./sagas-steven";
+import {call, delay, put, takeLatest} from 'redux-saga/effects';
+import {getGrid, getWorld} from '../api';
+import {gameActionIds, getGridEndAction, GetGridResponse, getWorldEndAction, GetWorldResponse} from "../slices";
 
 export function* watchGetGridStart() {
   yield takeLatest(
@@ -14,6 +10,25 @@ export function* watchGetGridStart() {
 }
 
 function* requestGetGrid() {
-  const grid = yield call(getGrid);
-  yield put(getGridEndAction(grid));
+  const getGridResponse: GetGridResponse = yield call(getGrid);
+  yield put(getGridEndAction(getGridResponse));
+}
+
+export function* watchGetWorldStart() {
+  yield takeLatest(
+    gameActionIds.getWorldStart,
+    requestGetGrid
+  );
+}
+
+function* requestGetWorld() {
+  const getWorldResponse: GetWorldResponse = yield call(getWorld);
+  yield put(getWorldEndAction(getWorldResponse));
+}
+
+export function* repeatedlyRequestGetWorld(intervalMs: number) {
+  while(true) {
+    yield call(requestGetWorld)
+    yield delay(intervalMs)
+  }
 }

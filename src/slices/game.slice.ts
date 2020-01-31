@@ -1,6 +1,5 @@
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {Namespacer} from "./Namespacer";
-import {BaseAction} from "../common";
 
 export interface Position {
   y: number
@@ -23,6 +22,10 @@ const actionIds = {
     namespacer.qualify('[0] getGridStart'),
   getGridEnd:
     namespacer.qualify('[1] getGridEnd'),
+  getWorldStart:
+    namespacer.qualify('[0] getWorldStart'),
+  getWorldEnd:
+    namespacer.qualify('[1] getWorldEnd'),
 } as const;
 
 export type GridTile
@@ -34,6 +37,13 @@ export type Grid
 export type GetGridResponse
   = Grid;
 
+export interface World {
+
+}
+
+export type GetWorldResponse
+  = World;
+
 const slice = createSlice({
   name: namespace,
   initialState: {
@@ -43,13 +53,15 @@ const slice = createSlice({
   },
   reducers: {},
   extraReducers: {
-    // moveWolf(state, action: PayloadAction<Position>) {
-    //   // state.hunters[0].pos.y++
-    // }
     [actionIds.getGridEnd]: (state, action: PayloadAction<GetGridResponse>) => {
       return {
         ...state,
         grid: action.payload
+      };
+    },
+    [actionIds.getWorldEnd]: (state, action: PayloadAction<GetWorldResponse>) => {
+      return {
+        ...state,
       };
     }
   }
@@ -69,4 +81,16 @@ export const getGridEndAction = (
 ): PayloadAction<GetGridResponse> => ({
   type: actionIds.getGridEnd,
   payload: getGridResponse,
+});
+
+export const getWorldStartAction = (): PayloadAction<null> => ({
+  type: actionIds.getWorldStart,
+  payload: null,
+});
+
+export const getWorldEndAction = (
+  getWorldResponse: GetWorldResponse
+): PayloadAction<GetWorldResponse> => ({
+  type: actionIds.getWorldEnd,
+  payload: getWorldResponse,
 });
