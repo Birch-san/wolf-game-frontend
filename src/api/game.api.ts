@@ -1,4 +1,6 @@
 import {Grid} from "../slices";
+import {apiClient} from "../common/apiClient";
 
 export const getGrid = (): Promise<Grid> =>
-  new Promise<Grid>(resolve => setTimeout(() => resolve([[]]), 0));
+  apiClient.get('grid')
+    .then((response): Grid => response.data);
