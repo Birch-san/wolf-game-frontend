@@ -11,23 +11,4 @@ export const store = configureStore({
   middleware: [...getDefaultMiddleware(), sagaMiddleware]
 });
 
-// storeNominal.dispatch
-
-// type INCREMENT = 'INCREMENT'
-// type DECREMENT = 'DECREMENT'
-// type SagaTypes
-//   = INCREMENT
-//   | DECREMENT;
-//
-// type EnhancedStore = {
-//   // dispatch(action: INCREMENT): INCREMENT
-//   // dispatch(action: DECREMENT): DECREMENT
-// } & typeof storeNominal
-// export const store: EnhancedStore = storeNominal
-// export type AppDispatch = typeof store.dispatch
-//
-// sagaMiddleware.run(rootSaga)
-// const sagaActionCreator = (type: SagaTypes) => store.dispatch({type})
-// const sagaAction = sagaActionCreator('INCREMENT')
-
 sagaMiddleware.run(rootSaga, 1500);
