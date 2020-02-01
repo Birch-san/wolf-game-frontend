@@ -6,10 +6,10 @@ import {Provider} from 'react-redux';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
 import {store} from "./store";
-import {getGridStartAction} from "./slices";
+import {joinRoomStartAction} from "./slices";
 import {App} from "./components";
 
-store.dispatch(getGridStartAction())
+store.dispatch(joinRoomStartAction('alex'))
 
 ReactDOM.render(
   <Provider store={store}>

@@ -19,10 +19,10 @@ const namespace = 'game' as const
 const namespacer = new Namespacer(namespace)
 
 const actionIds = {
-  getGridStart:
-    namespacer.qualify('[0] getGridStart'),
-  getGridEnd:
-    namespacer.qualify('[1] getGridEnd'),
+  joinRoomStart:
+    namespacer.qualify('[0] joinRoomStart'),
+  joinRoomEnd:
+    namespacer.qualify('[1] joinRoomEnd'),
   getWorldStart:
     namespacer.qualify('[0] getWorldStart'),
   getWorldEnd:
@@ -35,9 +35,6 @@ export type GridTile
 export type Grid
   = GridTile[][];
 
-export type GetGridResponse
-  = Grid;
-
 export interface World {
   wolves: Dictionary<Wolf>
   hunters: Dictionary<Hunter>
@@ -45,6 +42,14 @@ export interface World {
 
 export type GetWorldResponse
   = World;
+
+export interface Room {
+  name: string
+  grid: Grid
+}
+
+export type JoinRoomResponse
+  = Room;
 
 const slice = createSlice({
   name: namespace,
@@ -57,10 +62,10 @@ const slice = createSlice({
   },
   reducers: {},
   extraReducers: {
-    [actionIds.getGridEnd]: (state, action: PayloadAction<GetGridResponse>) => {
+    [actionIds.joinRoomEnd]: (state, action: PayloadAction<JoinRoomResponse>) => {
       return {
         ...state,
-        grid: action.payload
+        grid: action.payload.grid
       };
     },
     [actionIds.getWorldEnd]: (state, action: PayloadAction<GetWorldResponse>) => {
@@ -76,26 +81,39 @@ const { actions, reducer } = slice
 // export const { moveWolf } = actions
 export { reducer as gameReducer, actionIds as gameActionIds }
 
-export const getGridStartAction = (): PayloadAction<null> => ({
-  type: actionIds.getGridStart,
-  payload: null,
-});
+export type GetWorldStartAction
+  = PayloadAction<string>
 
-export const getGridEndAction = (
-  getGridResponse: GetGridResponse
-): PayloadAction<GetGridResponse> => ({
-  type: actionIds.getGridEnd,
-  payload: getGridResponse,
-});
-
-export const getWorldStartAction = (): PayloadAction<null> => ({
+export const getWorldStartAction = (
+  room: string
+): GetWorldStartAction => ({
   type: actionIds.getWorldStart,
-  payload: null,
+  payload: room,
 });
 
 export const getWorldEndAction = (
-  getWorldResponse: GetWorldResponse
+  response: GetWorldResponse
 ): PayloadAction<GetWorldResponse> => ({
   type: actionIds.getWorldEnd,
-  payload: getWorldResponse,
+  payload: response,
 });
+
+export type JoinRoomStartAction
+  = PayloadAction<string>;
+
+export const joinRoomStartAction = (
+  room: string
+): JoinRoomStartAction => ({
+  type: actionIds.joinRoomStart,
+  payload: room
+})
+
+export type JoinRoomEndAction
+  = PayloadAction<JoinRoomResponse>;
+
+export const joinRoomEndAction = (
+  response: JoinRoomResponse
+): JoinRoomEndAction => ({
+  type: actionIds.joinRoomEnd,
+  payload: response
+})

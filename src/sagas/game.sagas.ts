@@ -1,34 +1,55 @@
-import {call, delay, put, takeLatest} from 'redux-saga/effects';
-import {getGrid, getWorld} from '../api';
-import {gameActionIds, getGridEndAction, GetGridResponse, getWorldEndAction, GetWorldResponse} from "../slices";
+import {all, call, delay, fork, put, takeLatest} from 'redux-saga/effects';
+import {getRoom, getWorld} from '../api';
+import {
+  gameActionIds,
+  getWorldEndAction,
+  GetWorldResponse, getWorldStartAction, GetWorldStartAction, JoinRoomEndAction,
+  joinRoomEndAction,
+  JoinRoomResponse,
+  JoinRoomStartAction
+} from "../slices";
 
-export function* watchGetGridStart() {
+export function* watchJoinRoomStart() {
   yield takeLatest(
-    gameActionIds.getGridStart,
-    requestGetGrid
-  );
+    gameActionIds.joinRoomStart,
+    requestJoinRoom
+  )
 }
 
-function* requestGetGrid() {
-  const getGridResponse: GetGridResponse = yield call(getGrid);
-  yield put(getGridEndAction(getGridResponse));
+function* requestJoinRoom(action: JoinRoomStartAction) {
+  const response: JoinRoomResponse = yield call(getRoom, action.payload);
+  yield put(joinRoomEndAction(response))
+}
+
+export function* watchJoinRoomEnd(intervalMs: number) {
+  yield takeLatest(
+    gameActionIds.joinRoomEnd,
+    initRoom.bind(null, intervalMs)
+  )
+}
+
+function* initRoom(intervalMs: number, action: JoinRoomEndAction) {
+  yield all([
+    fork(watchGetWorldStart),
+    fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), intervalMs),
+  ])
 }
 
 export function* watchGetWorldStart() {
   yield takeLatest(
     gameActionIds.getWorldStart,
-    requestGetGrid
+    requestGetWorld
   );
 }
 
-function* requestGetWorld() {
-  const getWorldResponse: GetWorldResponse = yield call(getWorld);
-  yield put(getWorldEndAction(getWorldResponse));
+function* requestGetWorld(action: GetWorldStartAction) {
+  const response: GetWorldResponse = yield call(getWorld, action.payload);
+  yield put(getWorldEndAction(response));
 }
 
-export function* repeatedlyRequestGetWorld(intervalMs: number) {
+export function* repeatedlyRequestGetWorld(action: GetWorldStartAction, intervalMs: number) {
   while(true) {
-    yield call(requestGetWorld)
+    yield call(requestGetWorld.bind(null, action))
     yield delay(intervalMs)
   }
 }
