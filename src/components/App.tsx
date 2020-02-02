@@ -1,12 +1,17 @@
 import React from 'react';
 import './App.css';
-import { Grid } from '.';
+import {Room} from '.';
+import {Route, Switch, useRouteMatch} from "react-router";
 
 export const App: React.FC = () => {
   return (
-    <div>
-      <h3>Sup</h3>
-      <Grid/>
-    </div>
+    <Switch>
+      <Route path={'/room/:roomName'}>
+        <Room/>
+      </Route>
+      <Route path={'/'}>
+        Please navigate to a room.
+      </Route>
+    </Switch>
   );
 };

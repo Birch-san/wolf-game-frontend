@@ -8,12 +8,15 @@ import * as serviceWorker from './serviceWorker';
 import {store} from "./store";
 import {joinRoomStartAction} from "./slices";
 import {App} from "./components";
+import {BrowserRouter} from "react-router-dom";
 
 store.dispatch(joinRoomStartAction('alex'))
 
 ReactDOM.render(
   <Provider store={store}>
-    <App/>
+    <BrowserRouter>
+      <App/>
+    </BrowserRouter>
   </Provider>,
   document.getElementById('root'));
 
