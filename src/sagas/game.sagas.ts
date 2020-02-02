@@ -1,12 +1,12 @@
 import {all, call, delay, fork, put, takeLatest} from 'redux-saga/effects';
-import {getRoom, getWorld} from '../api';
+import {getRoom, getWorld, updateWorld} from '../api';
 import {
   gameActionIds,
   getWorldEndAction,
   GetWorldResponse, getWorldStartAction, GetWorldStartAction, JoinRoomEndAction,
   joinRoomEndAction,
   JoinRoomResponse,
-  JoinRoomStartAction
+  JoinRoomStartAction, updateWorldEndAction, UpdateWorldResponse, updateWorldStartAction, UpdateWorldStartAction
 } from "../slices";
 
 export function* watchJoinRoomStart() {
@@ -32,6 +32,8 @@ function* initRoom(intervalMs: number, action: JoinRoomEndAction) {
   yield all([
     fork(watchGetWorldStart),
     fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), intervalMs),
+    fork(watchUpdateWorldStart),
+    fork(repeatedlyRequestUpdateWorld, updateWorldStartAction(action.payload.name), intervalMs),
   ])
 }
 
@@ -49,7 +51,35 @@ function* requestGetWorld(action: GetWorldStartAction) {
 
 export function* repeatedlyRequestGetWorld(action: GetWorldStartAction, intervalMs: number) {
   while(true) {
-    yield call(requestGetWorld.bind(null, action))
+    try {
+      yield call(requestGetWorld.bind(null, action))
+    } catch(err) {
+      console.error(err)
+    }
+    yield delay(intervalMs)
+  }
+}
+
+export function* watchUpdateWorldStart() {
+  yield takeLatest(
+    gameActionIds.updateWorldStart,
+    requestUpdateWorld
+  );
+}
+
+function* requestUpdateWorld(action: UpdateWorldStartAction) {
+  const response: UpdateWorldResponse = yield call(updateWorld, action.payload);
+  yield put(updateWorldEndAction(response));
+}
+
+export function* repeatedlyRequestUpdateWorld(action: UpdateWorldStartAction, intervalMs: number) {
+  yield delay(intervalMs/2)
+  while(true) {
+    try {
+      yield call(requestUpdateWorld.bind(null, action))
+    } catch(err) {
+      console.error(err)
+    }
     yield delay(intervalMs)
   }
 }

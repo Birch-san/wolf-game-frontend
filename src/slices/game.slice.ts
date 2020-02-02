@@ -27,6 +27,10 @@ const actionIds = {
     namespacer.qualify('[0] getWorldStart'),
   getWorldEnd:
     namespacer.qualify('[1] getWorldEnd'),
+  updateWorldStart:
+    namespacer.qualify('[0] updateWorldStart'),
+  updateWorldEnd:
+    namespacer.qualify('[1] updateWorldEnd'),
 } as const;
 
 export type GridTile
@@ -40,16 +44,10 @@ export interface World {
   hunters: Dictionary<Hunter>
 }
 
-export type GetWorldResponse
-  = World;
-
 export interface Room {
   name: string
   grid: Grid
 }
-
-export type JoinRoomResponse
-  = Room;
 
 const slice = createSlice({
   name: namespace,
@@ -84,6 +82,9 @@ export { reducer as gameReducer, actionIds as gameActionIds }
 export type GetWorldStartAction
   = PayloadAction<string>
 
+export type GetWorldResponse
+  = World;
+
 export const getWorldStartAction = (
   room: string
 ): GetWorldStartAction => ({
@@ -98,8 +99,30 @@ export const getWorldEndAction = (
   payload: response,
 });
 
+export type UpdateWorldStartAction
+  = PayloadAction<string>
+
+export interface UpdateWorldResponse {};
+
+export const updateWorldStartAction = (
+  room: string
+): UpdateWorldStartAction => ({
+  type: actionIds.updateWorldStart,
+  payload: room,
+});
+
+export const updateWorldEndAction = (
+  response: UpdateWorldResponse
+): PayloadAction<UpdateWorldResponse> => ({
+  type: actionIds.updateWorldEnd,
+  payload: response,
+});
+
 export type JoinRoomStartAction
   = PayloadAction<string>;
+
+export type JoinRoomResponse
+  = Room;
 
 export const joinRoomStartAction = (
   room: string
