@@ -1,9 +1,9 @@
-import {fork, all} from 'redux-saga/effects';
-import {watchJoinRoomEnd, watchJoinRoomStart} from "./game.sagas";
+import {all, fork} from 'redux-saga/effects';
+import {initRoomBinder, watchRegisterStart, watchRoomJoins} from "./game.sagas";
 
 export const rootSaga = function* root(intervalMs: number) {
   yield all([
-    fork(watchJoinRoomStart),
-    fork(watchJoinRoomEnd, intervalMs)
+    fork(watchRegisterStart),
+    fork(watchRoomJoins, initRoomBinder(intervalMs))
   ])
 };

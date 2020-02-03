@@ -1,13 +1,47 @@
-import {all, call, delay, fork, put, takeLatest} from 'redux-saga/effects';
-import {getRoom, getWorld, updateWorld} from '../api';
+import {all, call, delay, fork, put, takeLatest, take} from 'redux-saga/effects';
+import {getRoom, getWorld, register, updateWorld} from '../api';
 import {
   gameActionIds,
   getWorldEndAction,
-  GetWorldResponse, getWorldStartAction, GetWorldStartAction, JoinRoomEndAction,
+  GetWorldResponse,
+  getWorldStartAction,
+  GetWorldStartAction,
+  JoinRoomEndAction,
   joinRoomEndAction,
   JoinRoomResponse,
-  JoinRoomStartAction, updateWorldEndAction, UpdateWorldResponse, updateWorldStartAction, UpdateWorldStartAction
+  JoinRoomStartAction, registerEndAction,
+  RegisterResponse,
+  updateWorldEndAction,
+  UpdateWorldResponse,
+  updateWorldStartAction,
+  UpdateWorldStartAction
 } from "../slices";
+
+export function* watchRegisterStart() {
+  yield takeLatest(
+    gameActionIds.registerStart,
+    requestRegister
+  )
+}
+
+function* requestRegister() {
+  const response: RegisterResponse = yield call(register);
+  yield put(registerEndAction(response))
+}
+
+// export function* watchRegisterEnd(intervalMs: number) {
+//   yield takeLatest(
+//     gameActionIds.registerEnd,
+//     watchRoomJoins.bind(null, intervalMs)
+//   )
+// }
+
+export function* watchRoomJoins(boundInitRoom: BoundInitRoom) {
+  yield all([
+    fork(watchJoinRoomStart),
+    fork(watchJoinRoomEnd, boundInitRoom)
+  ])
+}
 
 export function* watchJoinRoomStart() {
   yield takeLatest(
@@ -21,12 +55,17 @@ function* requestJoinRoom(action: JoinRoomStartAction) {
   yield put(joinRoomEndAction(response))
 }
 
-export function* watchJoinRoomEnd(intervalMs: number) {
+export function* watchJoinRoomEnd(boundInitRoom: BoundInitRoom) {
   yield takeLatest(
     gameActionIds.joinRoomEnd,
-    initRoom.bind(null, intervalMs)
+    boundInitRoom
   )
 }
+
+export const initRoomBinder = (intervalMs: number) =>
+  initRoom.bind(null, intervalMs)
+
+type BoundInitRoom = (action: JoinRoomEndAction) => ReturnType<typeof initRoom>
 
 function* initRoom(intervalMs: number, action: JoinRoomEndAction) {
   yield all([

@@ -19,6 +19,10 @@ const namespace = 'game' as const
 const namespacer = new Namespacer(namespace)
 
 const actionIds = {
+  registerStart:
+    namespacer.qualify('[0] registerStart'),
+  registerEnd:
+    namespacer.qualify('[1] registerEnd'),
   joinRoomStart:
     namespacer.qualify('[0] joinRoomStart'),
   joinRoomEnd:
@@ -49,10 +53,16 @@ export interface Room {
   grid: Grid
 }
 
+export interface User {
+  id: string
+  name: string
+}
+
 const slice = createSlice({
   name: namespace,
   initialState: {
     grid: [[]] as Grid,
+    user: null as User|null,
     world: {
       wolves: {},
       hunters: {},
@@ -60,6 +70,12 @@ const slice = createSlice({
   },
   reducers: {},
   extraReducers: {
+    [actionIds.registerEnd]: (state, action: PayloadAction<RegisterResponse>) => {
+      return {
+        ...state,
+        user: action.payload
+      };
+    },
     [actionIds.joinRoomEnd]: (state, action: PayloadAction<JoinRoomResponse>) => {
       return {
         ...state,
@@ -138,5 +154,26 @@ export const joinRoomEndAction = (
   response: JoinRoomResponse
 ): JoinRoomEndAction => ({
   type: actionIds.joinRoomEnd,
+  payload: response
+})
+
+export type RegisterStartAction
+  = PayloadAction;
+
+export type RegisterResponse
+  = User;
+
+export const registerStartAction = (): RegisterStartAction => ({
+  type: actionIds.registerStart,
+  payload: undefined,
+})
+
+export type RegisterEndAction
+  = PayloadAction<RegisterResponse>;
+
+export const registerEndAction = (
+  response: RegisterResponse
+): RegisterEndAction => ({
+  type: actionIds.registerEnd,
   payload: response
 })

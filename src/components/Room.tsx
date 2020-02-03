@@ -1,9 +1,15 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {Grid} from "./Grid";
 import {useParams} from "react-router";
+import {joinRoomStartAction} from "../slices";
+import {useTypedDispatch} from "../store";
 
 export const Room: React.FC = () => {
   const { roomName } = useParams();
+  const dispatch = useTypedDispatch()
+  useEffect(() => {
+    dispatch(joinRoomStartAction(roomName!!))
+  }, [])
   return (
     <div>
       <h3>{roomName}</h3>

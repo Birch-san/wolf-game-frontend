@@ -6,11 +6,11 @@ import {Provider} from 'react-redux';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
 import {store} from "./store";
-import {joinRoomStartAction} from "./slices";
+import {registerStartAction} from "./slices";
 import {App} from "./components";
 import {BrowserRouter} from "react-router-dom";
 
-store.dispatch(joinRoomStartAction('alex'))
+store.dispatch(registerStartAction())
 
 ReactDOM.render(
   <Provider store={store}>

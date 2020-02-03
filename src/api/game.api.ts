@@ -1,6 +1,10 @@
-import {GetWorldResponse, JoinRoomResponse, UpdateWorldResponse} from "../slices";
+import {GetWorldResponse, JoinRoomResponse, RegisterResponse, UpdateWorldResponse} from "../slices";
 import {apiClient} from "../common/apiClient";
 import {encodeUriSegment} from "../utils/PathParamUtils";
+
+export const register = (): Promise<RegisterResponse> =>
+  apiClient.get(`auth/register`)
+    .then((response): RegisterResponse => response.data);
 
 export const getRoom = (room: string): Promise<JoinRoomResponse> =>
   apiClient.get(`room/join/${encodeUriSegment(room)}`)
