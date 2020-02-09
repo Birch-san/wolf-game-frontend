@@ -15,7 +15,9 @@ interface WolfTileProps extends PositionProps {}
 
 const PlayerTile: React.FC<WolfTileProps> = ({ x, y, children }) => {
   return (
-    <div>{children}</div>
+    <div className="player" style={{
+      translate: `${x}em ${y}em`
+    }}>{children}</div>
   )
 };
 
@@ -70,7 +72,7 @@ export const Grid: React.FC = () => {
           grid.map((row, rowIx) => <tr key={rowIx}>
             {
               row.map((cell, colIx) => <td key={colIx}>
-                {cell}
+                {cell ? '🌲' : '🌱'}
               </td>)
             }
           </tr>)

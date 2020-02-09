@@ -2,4 +2,23 @@
   width: 1em;
   font-size: 2em;
   font-family: monospace;
+  padding: 0;
+  text-align: center;
+  /*vertical-align: middle;*/
+  height: 1em;
+  line-height: 1em;
+}
+
+table.grid {
+  border-collapse: collapse;
+}
+
+.player {
+  position: absolute;
+  font-size: 2em;
+  font-family: monospace;
+  transition: translate 500ms linear;
+  width: 1em;
+  height: 1em;
+  line-height: 1em;
 }
