@@ -34,7 +34,8 @@ const HunterTile: React.FC<HunterTileProps> = ({ x, y, username }) => {
     <PlayerTile
       x={x}
       y={y}
-    >{emoji}
+    >
+      <span role="img" aria-label="human">{emoji}</span>
     </PlayerTile>
   )
 };
@@ -44,7 +45,9 @@ const WolfTile: React.FC<WolfTileProps> = ({ x, y }) => {
     <PlayerTile
       x={x}
       y={y}
-    >🐺</PlayerTile>
+    >
+      <span role="img" aria-label="wolf">🐺</span>
+    </PlayerTile>
   )
 };
 
@@ -72,7 +75,10 @@ export const Grid: React.FC = () => {
           grid.map((row, rowIx) => <tr key={rowIx}>
             {
               row.map((cell, colIx) => <td key={colIx}>
-                {cell ? '🌲' : '🌱'}
+                {cell
+                  ? <span role="img" aria-label="tree">🌲</span>
+                  : <span role="img" aria-label="grass">🌱</span>
+                }
               </td>)
             }
           </tr>)

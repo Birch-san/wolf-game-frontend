@@ -52,6 +52,8 @@ const actionIds = {
     namespacer.qualify('[0] updateWorldStart'),
   updateWorldEnd:
     namespacer.qualify('[1] updateWorldEnd'),
+  requestAct:
+    namespacer.qualify('[0] requestAct'),
 } as const;
 
 export type GridTile
@@ -248,3 +250,24 @@ export const registerEndAction = (
   type: actionIds.registerEnd,
   payload: response
 })
+
+export type Contiguous
+  = -1|0|1
+interface MoveAction {
+  type: 'move'
+  x: Contiguous
+  y: Contiguous
+}
+
+export type GameAction
+  = MoveAction;
+
+export type RequestActAction
+  = PayloadAction<GameAction>;
+
+export const requestActAction = (
+  gameAction: GameAction
+): RequestActAction => ({
+  type: actionIds.requestAct,
+  payload: gameAction
+});
