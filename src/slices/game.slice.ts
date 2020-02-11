@@ -52,8 +52,10 @@ const actionIds = {
     namespacer.qualify('[0] updateWorldStart'),
   updateWorldEnd:
     namespacer.qualify('[1] updateWorldEnd'),
-  requestAct:
-    namespacer.qualify('[0] requestAct'),
+  requestActStart:
+    namespacer.qualify('[0] requestActStart'),
+  requestActEnd:
+    namespacer.qualify('[0] requestActEnd'),
 } as const;
 
 export type GridTile
@@ -77,8 +79,34 @@ export interface User {
   name: string
 }
 
+export function eq<T>(
+  t1: T|undefined,
+  t2: T|undefined,
+  equator: (t1: T, t2: T) => boolean):
+  boolean {
+  if (typeof t1 === 'undefined') {
+    return typeof t2 === 'undefined'
+  }
+  if (typeof t2 === 'undefined') {
+    return false;
+  }
+  return equator(t1, t2);
+}
+
+export function eqPosition(p1: Position, p2: Position): boolean {
+  return p1.x === p2.x
+  && p1.y === p2.y
+}
+
+export function eqUser(u1: User, u2: User): boolean {
+  return u1.id === u2.id
+  && u1.name === u2.name
+}
+
 export function eqEntity(e1: Entity, e2: Entity): boolean {
-  return e1.id === e2.id;
+  return e1.id === e2.id
+  && eq(e1.position, e2.position, eqPosition)
+  && eq(e1.user, e2.user, eqUser)
 }
 
 export function eqGrid(g1: Grid, g2: Grid): boolean {
@@ -168,6 +196,10 @@ const { actions, reducer } = slice
 // export const { moveWolf } = actions
 export { reducer as gameReducer, actionIds as gameActionIds }
 
+export interface MessageResponse {
+  message: string
+}
+
 export type GetWorldStartAction
   = PayloadAction<string>
 
@@ -191,7 +223,8 @@ export const getWorldEndAction = (
 export type UpdateWorldStartAction
   = PayloadAction<string>
 
-export interface UpdateWorldResponse {};
+export type UpdateWorldResponse
+  = MessageResponse
 
 export const updateWorldStartAction = (
   room: string
@@ -251,9 +284,13 @@ export const registerEndAction = (
   payload: response
 })
 
+interface NominalAction {
+  time: string
+  room: string
+}
 export type Contiguous
   = -1|0|1
-interface MoveAction {
+interface MoveAction extends NominalAction {
   type: 'move'
   x: Contiguous
   y: Contiguous
@@ -262,12 +299,22 @@ interface MoveAction {
 export type GameAction
   = MoveAction;
 
-export type RequestActAction
+export type RequestActStartAction
   = PayloadAction<GameAction>;
 
-export const requestActAction = (
+export const requestActStartAction = (
   gameAction: GameAction
-): RequestActAction => ({
-  type: actionIds.requestAct,
+): RequestActStartAction => ({
+  type: actionIds.requestActStart,
   payload: gameAction
+});
+
+export type RequestActResponse
+  = MessageResponse
+
+export const requestActEndAction = (
+  response: RequestActResponse
+): PayloadAction<RequestActResponse> => ({
+  type: actionIds.requestActEnd,
+  payload: response,
 });

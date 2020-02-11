@@ -2,9 +2,9 @@ import React, {KeyboardEventHandler, KeyboardEvent, MouseEventHandler} from "rea
 import styles from './Controls.module.scss'
 import useEventListener from '@use-it/event-listener'
 import {useTypedDispatch} from "../store";
-import {Contiguous, requestActAction} from "../slices";
+import {Contiguous, requestActStartAction} from "../slices";
 
-interface ControlProps {
+export interface ControlProps {
   onClick: MouseEventHandler<HTMLButtonElement>
 }
 export const Control: React.FC<ControlProps> = ({ children, onClick }) => {
@@ -13,11 +13,17 @@ export const Control: React.FC<ControlProps> = ({ children, onClick }) => {
   )
 }
 
-export const Controls: React.FC = () => {
+export interface ControlsProps {
+  room: string
+}
+
+export const Controls: React.FC<ControlsProps> = ({room}) => {
   const dispatch = useTypedDispatch();
   const requestMove = (x: Contiguous, y: Contiguous) => {
-    dispatch(requestActAction({
+    dispatch(requestActStartAction({
       type: 'move',
+      time: new Date().toISOString(),
+      room,
       x,
       y,
     }))

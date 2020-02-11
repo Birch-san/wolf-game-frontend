@@ -15,7 +15,7 @@ export const Room: React.FC = () => {
     <div>
       <h3>{roomName}</h3>
       <Grid/>
-      <Controls/>
+      <Controls room={roomName!!}/>
     </div>
   )
 }

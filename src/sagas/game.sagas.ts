@@ -1,5 +1,5 @@
 import {all, call, delay, fork, put, takeLatest, take} from 'redux-saga/effects';
-import {getRoom, getWorld, register, updateWorld} from '../api';
+import {act, getRoom, getWorld, register, updateWorld} from '../api';
 import {
   gameActionIds,
   getWorldEndAction,
@@ -10,11 +10,11 @@ import {
   joinRoomEndAction,
   JoinRoomResponse,
   JoinRoomStartAction, registerEndAction,
-  RegisterResponse,
+  RegisterResponse, RequestActStartAction, RequestActResponse,
   updateWorldEndAction,
   UpdateWorldResponse,
   updateWorldStartAction,
-  UpdateWorldStartAction
+  UpdateWorldStartAction, requestActEndAction
 } from "../slices";
 
 export function* watchRegisterStart() {
@@ -73,7 +73,24 @@ function* initRoom(intervalMs: number, action: JoinRoomEndAction) {
     fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), intervalMs),
     fork(watchUpdateWorldStart),
     fork(repeatedlyRequestUpdateWorld, updateWorldStartAction(action.payload.name), intervalMs),
+    fork(watchActionRequestStart),
   ])
+}
+
+export function* watchActionRequestStart() {
+  yield takeLatest(
+    gameActionIds.requestActStart,
+    requestAct
+  );
+}
+
+function* requestAct(action: RequestActStartAction) {
+  try {
+    const response: RequestActResponse = yield call(act, action.payload);
+    yield put(requestActEndAction(response));
+  } catch(err) {
+    console.error(err)
+  }
 }
 
 export function* watchGetWorldStart() {
