@@ -8,15 +8,15 @@ import * as serviceWorker from './serviceWorker';
 import {store} from "./store";
 import {registerStartAction} from "./slices";
 import {App} from "./components";
-import {BrowserRouter} from "react-router-dom";
+import {HashRouter} from "react-router-dom";
 
 store.dispatch(registerStartAction())
 
 ReactDOM.render(
   <Provider store={store}>
-    <BrowserRouter>
+    <HashRouter>
       <App/>
-    </BrowserRouter>
+    </HashRouter>
   </Provider>,
   document.getElementById('root'));
 

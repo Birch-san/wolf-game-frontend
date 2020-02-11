@@ -57,7 +57,7 @@ export const Controls: React.FC<ControlsProps> = ({room}) => {
         <Control onClick={() => requestMove(0, -1)}>Up</Control>
         <Control onClick={() => requestMove(0, 1)}>Down</Control>
       </div>
-      <Control onClick={() => requestMove(0, 1)}>Right</Control>
+      <Control onClick={() => requestMove(1, 0)}>Right</Control>
     </div>
   )
 };

@@ -14,4 +14,4 @@ export const store = configureStore({
 
 export const useTypedDispatch = () => useDispatch<typeof store.dispatch>()
 
-sagaMiddleware.run(rootSaga, 1500);
+sagaMiddleware.run(rootSaga);

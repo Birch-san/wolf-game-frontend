@@ -71,6 +71,7 @@ export interface World {
 
 export interface Room {
   name: string
+  updateFreqMs: number
   grid: Grid
 }
 

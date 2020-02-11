@@ -50,5 +50,6 @@
     ]
   },
   "devDependencies": {},
-  "proxy": "http://localhost:8888/public/"
+  "proxy": "http://localhost:8888/public/",
+  "homepage": "https://birchlabs.co.uk/wolf-game"
 }

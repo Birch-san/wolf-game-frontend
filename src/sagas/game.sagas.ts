@@ -1,4 +1,4 @@
-import {all, call, delay, fork, put, takeLatest, take} from 'redux-saga/effects';
+import {all, call, debounce, delay, fork, put, takeLatest} from 'redux-saga/effects';
 import {act, getRoom, getWorld, register, updateWorld} from '../api';
 import {
   gameActionIds,
@@ -9,12 +9,16 @@ import {
   JoinRoomEndAction,
   joinRoomEndAction,
   JoinRoomResponse,
-  JoinRoomStartAction, registerEndAction,
-  RegisterResponse, RequestActStartAction, RequestActResponse,
+  JoinRoomStartAction,
+  registerEndAction,
+  RegisterResponse,
+  requestActEndAction,
+  RequestActResponse,
+  RequestActStartAction,
   updateWorldEndAction,
   UpdateWorldResponse,
   updateWorldStartAction,
-  UpdateWorldStartAction, requestActEndAction
+  UpdateWorldStartAction
 } from "../slices";
 
 export function* watchRegisterStart() {
@@ -36,10 +40,10 @@ function* requestRegister() {
 //   )
 // }
 
-export function* watchRoomJoins(boundInitRoom: BoundInitRoom) {
+export function* watchRoomJoins() {
   yield all([
     fork(watchJoinRoomStart),
-    fork(watchJoinRoomEnd, boundInitRoom)
+    fork(watchJoinRoomEnd)
   ])
 }
 
@@ -55,30 +59,26 @@ function* requestJoinRoom(action: JoinRoomStartAction) {
   yield put(joinRoomEndAction(response))
 }
 
-export function* watchJoinRoomEnd(boundInitRoom: BoundInitRoom) {
+export function* watchJoinRoomEnd() {
   yield takeLatest(
     gameActionIds.joinRoomEnd,
-    boundInitRoom
+    initRoom
   )
 }
 
-export const initRoomBinder = (intervalMs: number) =>
-  initRoom.bind(null, intervalMs)
-
-type BoundInitRoom = (action: JoinRoomEndAction) => ReturnType<typeof initRoom>
-
-function* initRoom(intervalMs: number, action: JoinRoomEndAction) {
+function* initRoom(action: JoinRoomEndAction) {
   yield all([
     fork(watchGetWorldStart),
-    fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), intervalMs),
+    fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), action.payload.updateFreqMs),
     fork(watchUpdateWorldStart),
-    fork(repeatedlyRequestUpdateWorld, updateWorldStartAction(action.payload.name), intervalMs),
-    fork(watchActionRequestStart),
+    fork(repeatedlyRequestUpdateWorld, updateWorldStartAction(action.payload.name), action.payload.updateFreqMs),
+    fork(watchActionRequestStart, action.payload.updateFreqMs),
   ])
 }
 
-export function* watchActionRequestStart() {
-  yield takeLatest(
+export function* watchActionRequestStart(intervalMs: number) {
+  yield debounce(
+    intervalMs,
     gameActionIds.requestActStart,
     requestAct
   );
