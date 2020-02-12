@@ -16,7 +16,7 @@ interface WolfTileProps extends PositionProps {}
 const PlayerTile: React.FC<WolfTileProps> = ({ x, y, children }) => {
   return (
     <div className="player" style={{
-      translate: `${x}em ${y}em`
+      transform: `translate(${x}em, ${y}em)`
     }}>{children}</div>
   )
 };

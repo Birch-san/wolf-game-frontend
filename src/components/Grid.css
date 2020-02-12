@@ -17,7 +17,7 @@ table.grid {
   position: absolute;
   font-size: 2em;
   font-family: monospace;
-  transition: translate 500ms linear;
+  transition: transform 500ms linear;
   width: 1em;
   height: 1em;
   line-height: 1em;
