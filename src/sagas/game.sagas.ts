@@ -1,5 +1,5 @@
 import {all, call, cancel, delay, fork, put, takeEvery, takeLatest, throttle} from 'redux-saga/effects';
-import {act, getRoom, getWorld, register, updateWorld} from '../api';
+import {act, ApiOutcome, getRoom, getWorld, register, updateWorld} from '../api';
 import {
   gameActionIds,
   getWorldEndAction,
@@ -30,8 +30,13 @@ export function* watchRegisterStart() {
 }
 
 function* requestRegister() {
-  const response: RegisterResponse = yield call(register);
-  yield put(registerEndAction(response))
+  const { response, errorResponse } : ApiOutcome<RegisterResponse>
+    = yield call(register);
+  if (response) {
+    yield put(registerEndAction(response))
+  } else {
+    throw errorResponse
+  }
 }
 
 // export function* watchRegisterEnd(intervalMs: number) {
@@ -56,8 +61,13 @@ export function* watchJoinRoomStart() {
 }
 
 function* requestJoinRoom(action: JoinRoomStartAction) {
-  const response: JoinRoomResponse = yield call(getRoom, action.payload);
-  yield put(joinRoomEndAction(response))
+  const { response, errorResponse } : ApiOutcome<JoinRoomResponse>
+    = yield call(getRoom, action.payload);
+  if (response) {
+    yield put(joinRoomEndAction(response))
+  } else {
+    throw errorResponse
+  }
 }
 
 export function* watchJoinRoomEnd() {
@@ -110,8 +120,13 @@ export function* watchGetWorldStart() {
 }
 
 function* requestGetWorld(action: GetWorldStartAction) {
-  const response: GetWorldResponse = yield call(getWorld, action.payload);
-  yield put(getWorldEndAction(response));
+  const { response, errorResponse } : ApiOutcome<GetWorldResponse>
+    = yield call(getWorld, action.payload);
+  if (response) {
+    yield put(getWorldEndAction(response));
+  } else {
+    throw errorResponse
+  }
 }
 
 export function* repeatedlyRequestGetWorld(action: GetWorldStartAction, intervalMs: number) {
@@ -133,8 +148,13 @@ export function* watchUpdateWorldStart() {
 }
 
 function* requestUpdateWorld(action: UpdateWorldStartAction) {
-  const response: UpdateWorldResponse = yield call(updateWorld, action.payload);
-  yield put(updateWorldEndAction(response));
+  const { response, errorResponse } : ApiOutcome<UpdateWorldResponse>
+    = yield call(updateWorld, action.payload);
+  if (response) {
+    yield put(updateWorldEndAction(response));
+  } else {
+    throw errorResponse
+  }
 }
 
 export function* repeatedlyRequestUpdateWorld(action: UpdateWorldStartAction, intervalMs: number) {
