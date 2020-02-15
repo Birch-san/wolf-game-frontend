@@ -56,6 +56,8 @@ const actionIds = {
     namespacer.qualify('[0] requestActStart'),
   requestActEnd:
     namespacer.qualify('[0] requestActEnd'),
+  navigateAwayFromRoom:
+    namespacer.qualify('[0] navigateAwayFromRoom'),
 } as const;
 
 export type GridTile
@@ -318,4 +320,14 @@ export const requestActEndAction = (
 ): PayloadAction<RequestActResponse> => ({
   type: actionIds.requestActEnd,
   payload: response,
+});
+
+export type NavigateAwayFromRoomAction
+  = PayloadAction<string>;
+
+export const navigateAwayFromRoomAction = (
+  room: string
+): NavigateAwayFromRoomAction => ({
+  type: actionIds.navigateAwayFromRoom,
+  payload: room
 });

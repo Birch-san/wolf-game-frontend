@@ -86,7 +86,7 @@ function* initRoom(action: JoinRoomEndAction) {
     fork(watchActionRequestStart, action.payload.updateFreqMs),
     fork(function*() {
       yield takeEvery(
-        gameActionIds.joinRoomStart,
+        gameActionIds.navigateAwayFromRoom,
         function*() {
           yield cancel(task)
         }
