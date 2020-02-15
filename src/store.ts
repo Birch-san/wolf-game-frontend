@@ -13,5 +13,6 @@ export const store = configureStore({
 });
 
 export const useTypedDispatch = () => useDispatch<typeof store.dispatch>()
+// export const useTypedThunkDispatch = () => useDispatch<typeof store.dispatch>()
 
 sagaMiddleware.run(rootSaga);

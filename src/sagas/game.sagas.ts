@@ -1,4 +1,4 @@
-import {all, call, debounce, delay, fork, put, takeLatest} from 'redux-saga/effects';
+import {all, call, cancel, delay, fork, put, takeEvery, takeLatest, throttle} from 'redux-saga/effects';
 import {act, getRoom, getWorld, register, updateWorld} from '../api';
 import {
   gameActionIds,
@@ -20,6 +20,7 @@ import {
   updateWorldStartAction,
   UpdateWorldStartAction
 } from "../slices";
+import {Task} from 'redux-saga';
 
 export function* watchRegisterStart() {
   yield takeLatest(
@@ -67,21 +68,29 @@ export function* watchJoinRoomEnd() {
 }
 
 function* initRoom(action: JoinRoomEndAction) {
-  yield all([
+  const task: Task = yield all([
     fork(watchGetWorldStart),
     fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), action.payload.updateFreqMs),
     fork(watchUpdateWorldStart),
     fork(repeatedlyRequestUpdateWorld, updateWorldStartAction(action.payload.name), action.payload.updateFreqMs),
     fork(watchActionRequestStart, action.payload.updateFreqMs),
+    fork(function*() {
+      yield takeEvery(
+        gameActionIds.joinRoomStart,
+        function*() {
+          yield cancel(task)
+        }
+      )
+    }),
   ])
 }
 
 export function* watchActionRequestStart(intervalMs: number) {
-  yield debounce(
+  yield throttle(
     intervalMs,
     gameActionIds.requestActStart,
     requestAct
-  );
+  )
 }
 
 function* requestAct(action: RequestActStartAction) {
