@@ -49,6 +49,8 @@ const actionIds = {
     namespacer.qualify('[2] getMeEndNotLoggedIn'),
   worldRequestEndNotLoggedIn:
     namespacer.qualify('worldRequestEndNotLoggedIn'),
+  worldRequestEndUserNotInRoom:
+    namespacer.qualify('worldRequestEndUserNotInRoom'),
   loginStart:
     namespacer.qualify('[2] loginStart'),
   loginEnd:
@@ -376,7 +378,6 @@ export const loginEndAction = (
 
 export interface LoginEndFailPayload<T = StandardError> {
   errorResponse: T
-  error: Error // just for stack trace
 }
 export type LoginEndFailAction<T = StandardError>
   = PayloadAction<LoginEndFailPayload<T>>
@@ -413,7 +414,6 @@ export const registerEndAction = (
 
 export interface RegisterEndFailPayload<T = StandardError> {
   errorResponse: T
-  error: Error // just for stack trace
 }
 export type RegisterEndFailAction<T = StandardError>
   = PayloadAction<RegisterEndFailPayload<T>>
@@ -472,7 +472,6 @@ export const navigateAwayFromRoomAction = (
 
 export interface WorldRequestEndNotLoggedInPayload<T = StandardError> {
   errorResponse: T
-  error: Error // just for stack trace
 }
 export type WorldRequestEndNotLoggedInAction<T = StandardError>
   = PayloadAction<WorldRequestEndNotLoggedInPayload<T>>
@@ -481,5 +480,18 @@ export const worldRequestEndNotLoggedInAction = <T = StandardError>(
   payload: WorldRequestEndNotLoggedInPayload<T>
 ): WorldRequestEndNotLoggedInAction<T> => ({
   type: actionIds.worldRequestEndNotLoggedIn,
+  payload
+})
+
+export interface WorldRequestEndUserNotInRoom<T = StandardError> {
+  errorResponse: T
+}
+export type WorldRequestEndUserNotInRoomAction<T = StandardError>
+  = PayloadAction<WorldRequestEndUserNotInRoom<T>>
+
+export const worldRequestEndUserNotInRoomAction = <T = StandardError>(
+  payload: WorldRequestEndUserNotInRoom<T>
+): WorldRequestEndUserNotInRoomAction<T> => ({
+  type: actionIds.worldRequestEndUserNotInRoom,
   payload
 })

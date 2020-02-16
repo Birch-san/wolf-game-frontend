@@ -30,7 +30,7 @@ import {
   GetWorldStartAction,
   JoinRoomEndAction,
   joinRoomEndAction,
-  JoinRoomResponse,
+  JoinRoomResponse, joinRoomStartAction,
   JoinRoomStartAction,
   LoginAction,
   LoginEndAction,
@@ -38,7 +38,7 @@ import {
   LoginEndFailAction,
   loginEndFailAction,
   LoginResponse,
-  loginStartAction,
+  loginStartAction, navigateAwayFromRoomAction,
   RegisterEndAction,
   registerEndAction,
   RegisterEndFailAction,
@@ -53,7 +53,7 @@ import {
   UpdateWorldStartAction,
   User,
   WorldRequestEndNotLoggedInAction,
-  worldRequestEndNotLoggedInAction
+  worldRequestEndNotLoggedInAction, worldRequestEndUserNotInRoomAction
 } from "../slices";
 import {Task} from 'redux-saga';
 import {RootState} from "../store";
@@ -65,6 +65,15 @@ export function* watchEnsureAuthStart() {
   )
 }
 
+export function* watchEnsureAuthEnd() {
+  yield takeEvery(
+    gameActionIds.ensureAuthEnd,
+    function() {
+      console.log('Successfully (re)authenticated!')
+    }
+  )
+}
+
 export function* watchAuth() {
   yield all([
     fork(watchGetMeStart),
@@ -73,6 +82,7 @@ export function* watchAuth() {
     fork(watchLoginStart),
     fork(watchRegisterStart),
     fork(watchEnsureAuthStart),
+    fork(watchEnsureAuthEnd),
   ])
 }
 
@@ -105,7 +115,7 @@ export function* ensureAuth() {
         }
         // fall-through (wrong credentials [maybe our password is wrong or user deleted], so try register instead)
       } else {
-        console.warn(`Encountered login error ${JSON.stringify(loginFail?.payload.errorResponse)}>. Will attempt to register new user instead. Cause:`, loginFail?.payload.error)
+        console.warn(`Encountered login error ${JSON.stringify(loginFail?.payload.errorResponse)}>. Will attempt to register new user instead.`)
       }
       // fall-through (login's failing [maybe our password is wrong or user deleted], so try register instead)
     }
@@ -145,7 +155,7 @@ export function* ensureAuth() {
     yield put(ensureAuthEndAction(registered.payload));
     return
   } else {
-    console.error(`Encountered registration error ${JSON.stringify(notRegistered?.payload.errorResponse)}>. Cause:`, notRegistered?.payload.error)
+    console.error(`Encountered registration error ${JSON.stringify(notRegistered?.payload.errorResponse)}`)
   }
 }
 
@@ -198,7 +208,7 @@ export function* watchWorldRequestEndNotLoggedIn() {
   yield takeLatest(
     gameActionIds.worldRequestEndNotLoggedIn,
     function* (action: WorldRequestEndNotLoggedInAction) {
-      console.error(`Encountered auth error ${JSON.stringify(action.payload.errorResponse)}>. Attempting to re-authenticate. Cause:`, action.payload.error)
+      console.warn(`Encountered auth error ${JSON.stringify(action.payload.errorResponse)}>. Attempting to re-authenticate.`)
       yield put(ensureAuthStartAction())
     }
   )
@@ -215,10 +225,7 @@ function* requestLogin(loginAction: LoginAction) {
   const { response, errorResponse } : ApiOutcome<LoginResponse>
     = yield call(login, loginAction.payload);
   if (!response) {
-    yield put(loginEndFailAction({
-      errorResponse,
-      error: new Error()
-    }))
+    yield put(loginEndFailAction({ errorResponse }))
     return
   }
   yield put(loginEndAction(response))
@@ -262,8 +269,22 @@ export function* watchJoinRoomEnd() {
   )
 }
 
+export function* watchWorldRequestEndUserNotInRoom(roomName: string) {
+  yield takeLatest(
+    gameActionIds.worldRequestEndUserNotInRoom,
+    function*() {
+      yield all([
+        put(navigateAwayFromRoomAction(roomName)),
+        put(joinRoomStartAction(roomName)),
+        ])
+    }
+  )
+}
+
 function* initRoom(action: JoinRoomEndAction) {
+  console.log('Successfully (re)joined room!')
   const task: Task = yield all([
+    fork(watchWorldRequestEndUserNotInRoom, action.payload.name),
     fork(watchGetWorldStart),
     fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), action.payload.updateFreqMs),
     fork(watchUpdateWorldStart),
@@ -311,10 +332,11 @@ function* requestGetWorld(action: GetWorldStartAction) {
     yield put(getWorldEndAction(response));
   } else {
     if (errorResponse?.error === 'NOT_LOGGED_IN') {
-      yield put(worldRequestEndNotLoggedInAction({
-        errorResponse,
-        error: new Error()
-      }));
+      console.warn("API says we're not logged in. This may happen due to session expiry (every 5 mins). We'll try to recover.")
+      yield put(worldRequestEndNotLoggedInAction({ errorResponse }));
+    } else if (errorResponse?.error === 'USER_NOT_IN_ROOM') {
+      console.warn("API says we're not in the room. This may happen due to garbage collection (every 15 seconds of idleness) or generating a new user (i.e. our session expired and we didn't have a password to login again as the original user, so we registered a new user). We'll try to recover.")
+      yield put(worldRequestEndUserNotInRoomAction({ errorResponse }));
     } else {
       throw errorResponse
     }
@@ -346,10 +368,8 @@ function* requestUpdateWorld(action: UpdateWorldStartAction) {
     yield put(updateWorldEndAction(response));
   } else {
     if (errorResponse?.error === 'NOT_LOGGED_IN') {
-      yield put(worldRequestEndNotLoggedInAction({
-        errorResponse,
-        error: new Error()
-      }));
+      console.warn("API says we're not logged in. This may happen due to session expiry (every 5 mins). We'll try to recover.")
+      yield put(worldRequestEndNotLoggedInAction({ errorResponse }));
     } else {
       throw errorResponse
     }
