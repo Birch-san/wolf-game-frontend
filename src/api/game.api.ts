@@ -1,7 +1,10 @@
 import {
   GameAction,
+  GetMeResponse,
   GetWorldResponse,
   JoinRoomResponse,
+  LoginAction,
+  LoginResponse,
   RegisterResponse,
   RequestActResponse,
   UpdateWorldResponse
@@ -10,8 +13,13 @@ import {apiClient} from "../common/apiClient";
 import {encodeUriSegment} from "../utils/PathParamUtils";
 import {AxiosError, AxiosResponse} from "axios";
 
+export type KnownErrorCode
+  = 'CLIENT_ERROR'
+  | 'USER_NOT_IN_ROOM'
+  | 'NOT_LOGGED_IN'
+  | 'FAILED_QUERY'
 export interface StandardError {
-  error: string
+  error: KnownErrorCode | string
   message: string
 }
 export interface ApiErrorOutcome<E = StandardError> {
@@ -31,6 +39,12 @@ function wrapOutcome<T, E = StandardError>(promise: Promise<AxiosResponse<T>>): 
       ({ response: undefined, errorResponse: response.response?.data }))
 }
 
+export const getMe = (): Promise<ApiOutcome<GetMeResponse>> =>
+  wrapOutcome(apiClient.get(`auth/me`));
+
+export const login = (loginAction: LoginAction): Promise<ApiOutcome<LoginResponse>> =>
+  wrapOutcome(apiClient.post(`auth/login`, loginAction));
+
 export const register = (): Promise<ApiOutcome<RegisterResponse>> =>
   wrapOutcome(apiClient.get(`auth/register`));
 
@@ -44,8 +58,4 @@ export const getWorld = (room: string): Promise<ApiOutcome<GetWorldResponse>> =>
   wrapOutcome(apiClient.get(`world/room/${encodeUriSegment(room)}`));
 
 export const act = (gameAction: GameAction): Promise<ApiOutcome<RequestActResponse>> =>
-  wrapOutcome(apiClient.post(`world/room/${encodeUriSegment(gameAction.room)}/act`, gameAction, {
-    headers: {
-      'Content-type': 'application/json;charset=utf8'
-    }
-  }));
+  wrapOutcome(apiClient.post(`world/room/${encodeUriSegment(gameAction.room)}/act`, gameAction));

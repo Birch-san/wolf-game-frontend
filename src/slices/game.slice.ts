@@ -36,10 +36,24 @@ const namespace = 'game' as const
 const namespacer = new Namespacer(namespace)
 
 const actionIds = {
+  ensureInitialAuthStart:
+    namespacer.qualify('[0] ensureInitialAuthStart'),
+  ensureInitialAuthEnd:
+    namespacer.qualify('[1] ensureInitialAuthEnd'),
+  getMeStart:
+    namespacer.qualify('[0] getMeStart'),
+  getMeEnd:
+    namespacer.qualify('[1] getMeEnd'),
+  getMeEndNotLoggedIn:
+    namespacer.qualify('[2] getMeEndNotLoggedIn'),
+  loginStart:
+    namespacer.qualify('[2] loginStart'),
+  loginEnd:
+    namespacer.qualify('[3] loginEnd'),
   registerStart:
-    namespacer.qualify('[0] registerStart'),
+    namespacer.qualify('[4] registerStart'),
   registerEnd:
-    namespacer.qualify('[1] registerEnd'),
+    namespacer.qualify('[5] registerEnd'),
   joinRoomStart:
     namespacer.qualify('[0] joinRoomStart'),
   joinRoomEnd:
@@ -77,20 +91,15 @@ export interface Room {
   grid: Grid
 }
 
-export interface User {
-  id: string
-  name: string
-}
-
 export function eq<T>(
-  t1: T|undefined,
-  t2: T|undefined,
+  t1: T|undefined|null,
+  t2: T|undefined|null,
   equator: (t1: T, t2: T) => boolean):
   boolean {
-  if (typeof t1 === 'undefined') {
-    return typeof t2 === 'undefined'
+  if (typeof t1 === 'undefined' || t1 === null) {
+    return typeof t2 === 'undefined' || t2 === null
   }
-  if (typeof t2 === 'undefined') {
+  if (typeof t2 === 'undefined' || t2 === null) {
     return false;
   }
   return equator(t1, t2);
@@ -163,6 +172,7 @@ const slice = createSlice({
   initialState: {
     grid: [[]] as Grid,
     user: null as User|null,
+    password: null as string|null,
     world: {
       wolves: [],
       hunters: [],
@@ -170,10 +180,23 @@ const slice = createSlice({
   },
   reducers: {},
   extraReducers: {
+    [actionIds.getMeEnd]: (state, action: PayloadAction<GetMeResponse>) => {
+      return {
+        ...state,
+        user: {
+          id: action.payload.id,
+          name: action.payload.name,
+        }
+      };
+    },
     [actionIds.registerEnd]: (state, action: PayloadAction<RegisterResponse>) => {
       return {
         ...state,
-        user: action.payload
+        user: {
+          id: action.payload.id,
+          name: action.payload.name,
+        },
+        password: action.payload.password
       };
     },
     [actionIds.joinRoomEnd]: (state, action: PayloadAction<JoinRoomResponse>) => {
@@ -266,11 +289,90 @@ export const joinRoomEndAction = (
   payload: response
 })
 
+export type InitialAuth
+  = GetMeResponse
+  | RegisterResponse
+export type EnsureInitialAuthStartAction
+  = PayloadAction
+
+export const ensureInitialAuthStartAction = ():
+  EnsureInitialAuthStartAction => ({
+  type: actionIds.ensureInitialAuthStart,
+  payload: undefined
+})
+
+export type EnsureInitialAuthEndAction
+  = PayloadAction<InitialAuth>
+
+export const ensureInitialAuthEndAction = (
+  initialAuth: InitialAuth
+): EnsureInitialAuthEndAction => ({
+  type: actionIds.ensureInitialAuthEnd,
+  payload: initialAuth
+})
+
+export type GetMeStartAction
+  = PayloadAction;
+
+export const getMeStartAction = (): GetMeStartAction => ({
+  type: actionIds.getMeStart,
+  payload: undefined,
+})
+
+export type GetMeResponse
+  = User & {
+  loggedIn: boolean
+}
+export type GetMeEndAction
+  = PayloadAction<GetMeResponse>
+
+export const getMeEndAction = (
+  response: GetMeResponse
+): GetMeEndAction => ({
+  type: actionIds.getMeEnd,
+  payload: response
+})
+
+export type GetMeEndNotLoggedInAction
+  = PayloadAction
+
+export const getMeEndNotLoggedInAction = (): GetMeEndNotLoggedInAction => ({
+  type: actionIds.getMeEndNotLoggedIn,
+  payload: undefined
+})
+
+export interface LoginRequest {
+  userId: string
+  password: string
+}
+export type LoginAction
+  = PayloadAction<LoginRequest>;
+
+export const loginStartAction = (loginRequest: LoginRequest): LoginAction => ({
+  type: actionIds.loginStart,
+  payload: loginRequest,
+})
+
+export interface LoginResponse {
+  success: boolean
+}
+export type LoginEndAction
+  = PayloadAction<LoginResponse>;
+
+export const loginEndAction = (
+  response: LoginResponse
+): LoginEndAction => ({
+  type: actionIds.loginEnd,
+  payload: response
+})
+
 export type RegisterStartAction
   = PayloadAction;
 
 export type RegisterResponse
-  = User;
+  = User & {
+  password: string
+};
 
 export const registerStartAction = (): RegisterStartAction => ({
   type: actionIds.registerStart,

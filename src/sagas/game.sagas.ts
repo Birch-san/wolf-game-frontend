@@ -1,7 +1,9 @@
-import {all, call, cancel, delay, fork, put, takeEvery, takeLatest, throttle} from 'redux-saga/effects';
-import {act, ApiOutcome, getRoom, getWorld, register, updateWorld} from '../api';
+import {all, call, cancel, delay, fork, put, takeEvery, takeLatest, throttle, take, PutEffect, CallEffect} from 'redux-saga/effects';
+import {act, ApiOutcome, getMe, getRoom, getWorld, register, updateWorld} from '../api';
 import {
-  gameActionIds,
+  EnsureInitialAuthEndAction,
+  ensureInitialAuthEndAction,
+  gameActionIds, GetMeEndAction, getMeEndAction, getMeEndNotLoggedInAction, GetMeResponse,
   getWorldEndAction,
   GetWorldResponse,
   getWorldStartAction,
@@ -9,9 +11,9 @@ import {
   JoinRoomEndAction,
   joinRoomEndAction,
   JoinRoomResponse,
-  JoinRoomStartAction,
+  JoinRoomStartAction, loginEndAction,
   registerEndAction,
-  RegisterResponse,
+  RegisterResponse, registerStartAction,
   requestActEndAction,
   RequestActResponse,
   RequestActStartAction,
@@ -21,6 +23,43 @@ import {
   UpdateWorldStartAction
 } from "../slices";
 import {Task} from 'redux-saga';
+
+export function* watchEnsureInitialAuthStart() {
+  yield takeLatest(
+    gameActionIds.ensureInitialAuthStart,
+    ensureInitialAuth
+  )
+}
+
+export function* ensureInitialAuth() {
+  yield all([
+    fork(requestGetMe),
+    fork(watchGetMeEndNotLoggedIn),
+    fork(watchRegisterStart),
+  ]);
+}
+
+export function* requestGetMe() {
+  const { response, errorResponse } : ApiOutcome<GetMeResponse>
+    = yield call(getMe);
+  if (!response) {
+    throw errorResponse
+  }
+  if (response.loggedIn) {
+    yield put(getMeEndAction(response))
+  } else {
+    yield put(getMeEndNotLoggedInAction())
+  }
+}
+
+export function* watchGetMeEndNotLoggedIn() {
+  yield takeLatest(
+    gameActionIds.getMeEndNotLoggedIn,
+    function* () {
+      yield put(registerStartAction())
+    }
+  )
+}
 
 export function* watchRegisterStart() {
   yield takeLatest(
@@ -32,11 +71,10 @@ export function* watchRegisterStart() {
 function* requestRegister() {
   const { response, errorResponse } : ApiOutcome<RegisterResponse>
     = yield call(register);
-  if (response) {
-    yield put(registerEndAction(response))
-  } else {
+  if (!response) {
     throw errorResponse
   }
+  yield put(registerEndAction(response))
 }
 
 // export function* watchRegisterEnd(intervalMs: number) {

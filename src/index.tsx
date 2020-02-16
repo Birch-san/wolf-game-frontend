@@ -6,11 +6,11 @@ import {Provider} from 'react-redux';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
 import {store} from "./store";
-import {registerStartAction} from "./slices";
+import {ensureInitialAuthStartAction} from "./slices";
 import {App} from "./components";
 import {HashRouter} from "react-router-dom";
 
-store.dispatch(registerStartAction())
+store.dispatch(ensureInitialAuthStartAction());
 
 ReactDOM.render(
   <Provider store={store}>
