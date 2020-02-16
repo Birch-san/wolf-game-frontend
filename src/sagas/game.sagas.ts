@@ -121,6 +121,8 @@ export function* ensureAuth() {
         console.warn(`Encountered login error ${JSON.stringify(loginFail?.payload.errorResponse)}>. Will attempt to register new user instead.`)
       }
       // fall-through (login's failing [maybe our password is wrong or user deleted], so try register instead)
+    } else {
+      console.log("We don't remember your original password (it was known when you originally registered, but discarded when the browser was closed), so we will not be able to login as your original user. We'll attempt to register a new user.")
     }
     // fall-through (we lack a password, so register new user)
   } else {
@@ -187,7 +189,7 @@ export function* watchGetMeEnd() {
     gameActionIds.getMeEnd,
     function(getMeEndAction: GetMeEndAction) {
       if (getMeEndAction.payload.loggedIn) {
-        console.log("We have some credentials in our session already (i.e. we have registered/logged-in before, and have refreshed the page since then)")
+        console.log("We have a user in our session already (i.e. we have registered/logged-in before, and have refreshed the page since then)")
       } else {
         console.log("We lack a session (i.e. it expired or this is our first time playing). Will need to register or login.")
       }
@@ -372,10 +374,15 @@ function* requestGetWorld(action: GetWorldStartAction) {
 
 export function* repeatedlyRequestGetWorld(action: GetWorldStartAction, intervalMs: number) {
   while(true) {
-    try {
-      yield call(requestGetWorld.bind(null, action))
-    } catch(err) {
-      console.error(err)
+    const authKnownBad: boolean = yield select((state: RootState) => state.game.authKnownBad)
+    if (authKnownBad) {
+      console.log("Skipping world poll because we have known-bad authentication")
+    } else {
+      try {
+        yield call(requestGetWorld.bind(null, action))
+      } catch(err) {
+        console.error(err)
+      }
     }
     yield delay(intervalMs)
   }
@@ -406,10 +413,15 @@ function* requestUpdateWorld(action: UpdateWorldStartAction) {
 export function* repeatedlyRequestUpdateWorld(action: UpdateWorldStartAction, intervalMs: number) {
   yield delay(intervalMs/2)
   while(true) {
-    try {
-      yield call(requestUpdateWorld.bind(null, action))
-    } catch(err) {
-      console.error(err)
+    const authKnownBad: boolean = yield select((state: RootState) => state.game.authKnownBad)
+    if (authKnownBad) {
+      console.log("Skipping world update because we have known-bad authentication")
+    } else {
+      try {
+        yield call(requestUpdateWorld.bind(null, action))
+      } catch (err) {
+        console.error(err)
+      }
     }
     yield delay(intervalMs)
   }

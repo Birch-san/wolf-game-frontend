@@ -180,6 +180,7 @@ const slice = createSlice({
   name: namespace,
   initialState: {
     grid: [[]] as Grid,
+    authKnownBad: false,
     user: null as User|null,
     password: null as string|null,
     world: {
@@ -189,6 +190,18 @@ const slice = createSlice({
   },
   reducers: {},
   extraReducers: {
+    [actionIds.ensureAuthStart]: (state, action: PayloadAction<EnsureAuthStartAction>) => {
+      return {
+        ...state,
+        authKnownBad: true,
+      };
+    },
+    [actionIds.ensureAuthEnd]: (state, action: PayloadAction<EnsureAuthEndAction>) => {
+      return {
+        ...state,
+        authKnownBad: false,
+      };
+    },
     [actionIds.getMeEnd]: (state, action: PayloadAction<GetMeResponse>) => {
       return {
         ...state,
