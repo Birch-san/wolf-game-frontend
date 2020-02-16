@@ -4,6 +4,7 @@ import {useParams} from "react-router";
 import {joinRoomStartAction, navigateAwayFromRoomAction} from "../slices";
 import {useTypedDispatch} from "../store";
 import {Controls} from "./Controls";
+import {ActionLog} from "./ActionLog";
 
 export const Room: React.FC = () => {
   const { roomName } = useParams();
@@ -19,6 +20,7 @@ export const Room: React.FC = () => {
       <h3>{roomName}</h3>
       <Grid/>
       <Controls room={roomName!!}/>
+      <ActionLog/>
     </div>
   )
 }

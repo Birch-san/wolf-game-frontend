@@ -75,6 +75,12 @@ const actionIds = {
     namespacer.qualify('[0] updateWorldStart'),
   updateWorldEnd:
     namespacer.qualify('[1] updateWorldEnd'),
+  requestActEnqueue:
+    namespacer.qualify('[0] requestActEnqueue'),
+  requestActQueueShiftStart:
+    namespacer.qualify('[0] requestActQueueShiftStart'),
+  requestActQueueShiftEnd:
+    namespacer.qualify('[0] requestActQueueShiftEnd'),
   requestActStart:
     namespacer.qualify('[0] requestActStart'),
   requestActEnd:
@@ -176,6 +182,32 @@ function compareEntity(e1: Entity, e2: Entity): number {
   return e1.id.localeCompare(e2.id);
 }
 
+function eqAction(a1: GameAction, a2: GameAction) {
+  return a1.type === a2.type
+  && a1.time === a2.time
+}
+
+function eqLog(l1: GameActionLog, l2: GameActionLog) {
+  return eqAction(l1.action, l2.action)
+}
+
+function getLatestLog(history: ActionHistory) {
+  return history[history.length - 1 ]
+}
+
+export function eqActionHistory(a1: ActionHistory, a2: ActionHistory) {
+  return a1.length === a2.length
+    && (!a1.length || eqLog(getLatestLog(a1), getLatestLog(a2)))
+}
+
+export type ActionHistory
+  = GameActionLog[]
+export interface GameActionLog {
+  id: number
+  action: GameAction
+}
+
+let gameActionLogId = 0
 const slice = createSlice({
   name: namespace,
   initialState: {
@@ -187,22 +219,51 @@ const slice = createSlice({
       wolves: [],
       hunters: [],
     } as World,
+    actionQueue: [] as ActionHistory,
+    actionHistory: [] as ActionHistory
   },
   reducers: {},
   extraReducers: {
-    [actionIds.ensureAuthStart]: (state, action: PayloadAction<EnsureAuthStartAction>) => {
+    [actionIds.requestActEnqueue]: (state, action: RequestActEnqueueAction) => {
+      return {
+        ...state,
+        actionQueue: [...state.actionQueue, {
+          id: gameActionLogId++,
+          action: action.payload
+        }],
+      };
+    },
+    [actionIds.requestActQueueShiftEnd]: (state, action: RequestActQueueShiftEndAction) => {
+      const headAction = state.actionQueue.length
+        ? state.actionQueue[0]
+        : undefined;
+      if (!headAction) {
+        return state
+      }
+      return {
+        ...state,
+        actionQueue: state.actionQueue.filter((log: GameActionLog) => !eqLog(log, action.payload.log)),
+      };
+    },
+    [actionIds.requestActStart]: (state, action: RequestActStartAction) => {
+      return {
+        ...state,
+        actionHistory: state.actionHistory.slice(0, 9).concat(action.payload),
+      };
+    },
+    [actionIds.ensureAuthStart]: (state, action: EnsureAuthStartAction) => {
       return {
         ...state,
         authKnownBad: true,
       };
     },
-    [actionIds.ensureAuthEnd]: (state, action: PayloadAction<EnsureAuthEndAction>) => {
+    [actionIds.ensureAuthEnd]: (state, action: EnsureAuthEndAction) => {
       return {
         ...state,
         authKnownBad: false,
       };
     },
-    [actionIds.getMeEnd]: (state, action: PayloadAction<GetMeResponse>) => {
+    [actionIds.getMeEnd]: (state, action: GetMeEndAction) => {
       return {
         ...state,
         user: {
@@ -211,7 +272,7 @@ const slice = createSlice({
         }
       };
     },
-    [actionIds.registerEnd]: (state, action: PayloadAction<RegisterResponse>) => {
+    [actionIds.registerEnd]: (state, action: RegisterEndAction) => {
       return {
         ...state,
         user: {
@@ -221,13 +282,15 @@ const slice = createSlice({
         password: action.payload.password
       };
     },
-    [actionIds.joinRoomEnd]: (state, action: PayloadAction<JoinRoomResponse>) => {
+    [actionIds.joinRoomEnd]: (state, action: JoinRoomEndAction) => {
       return {
         ...state,
-        grid: action.payload.grid
+        grid: action.payload.grid,
+        actionQueue: [],
+        actionHistory: [],
       };
     },
-    [actionIds.getWorldEnd]: (state, action: PayloadAction<GetWorldResponse>) => {
+    [actionIds.getWorldEnd]: (state, action: GetWorldEndAction) => {
       return {
         ...state,
         world: {
@@ -253,6 +316,8 @@ export type GetWorldStartAction
 
 export type GetWorldResponse
   = World;
+export type GetWorldEndAction
+  = PayloadAction<GetWorldResponse>;
 
 export const getWorldStartAction = (
   room: string
@@ -263,7 +328,7 @@ export const getWorldStartAction = (
 
 export const getWorldEndAction = (
   response: GetWorldResponse
-): PayloadAction<GetWorldResponse> => ({
+): GetWorldEndAction => ({
   type: actionIds.getWorldEnd,
   payload: response,
 });
@@ -453,11 +518,42 @@ interface MoveAction extends NominalAction {
 export type GameAction
   = MoveAction;
 
-export type RequestActStartAction
+export type RequestActEnqueueAction
   = PayloadAction<GameAction>;
 
-export const requestActStartAction = (
+export const requestActEnqueueAction = (
   gameAction: GameAction
+): RequestActEnqueueAction => ({
+  type: actionIds.requestActEnqueue,
+  payload: gameAction
+});
+
+export type RequestActQueueShiftStartAction
+  = PayloadAction;
+
+export const requestActQueueShiftStartAction = (): RequestActQueueShiftStartAction => ({
+  type: actionIds.requestActQueueShiftStart,
+  payload: undefined
+});
+
+export interface RequestActQueueShiftEndPayload {
+  log: GameActionLog
+}
+export type RequestActQueueShiftEndAction
+  = PayloadAction<RequestActQueueShiftEndPayload>;
+
+export const requestActQueueShiftEndAction = (
+  payload: RequestActQueueShiftEndPayload
+): RequestActQueueShiftEndAction => ({
+  type: actionIds.requestActQueueShiftEnd,
+  payload
+});
+
+export type RequestActStartAction
+  = PayloadAction<GameActionLog>;
+
+export const requestActStartAction = (
+  gameAction: GameActionLog
 ): RequestActStartAction => ({
   type: actionIds.requestActStart,
   payload: gameAction

@@ -15,6 +15,7 @@ import {
 } from 'redux-saga/effects';
 import {act, ApiOutcome, getMe, getRoom, getWorld, login, register, updateWorld} from '../api';
 import {
+  ActionHistory,
   ensureAuthEndAction,
   ensureAuthStartAction,
   gameActionIds,
@@ -30,7 +31,8 @@ import {
   GetWorldStartAction,
   JoinRoomEndAction,
   joinRoomEndAction,
-  JoinRoomResponse, joinRoomStartAction,
+  JoinRoomResponse,
+  joinRoomStartAction,
   JoinRoomStartAction,
   LoginAction,
   LoginEndAction,
@@ -38,14 +40,20 @@ import {
   LoginEndFailAction,
   loginEndFailAction,
   LoginResponse,
-  loginStartAction, navigateAwayFromRoomAction,
+  loginStartAction,
+  navigateAwayFromRoomAction,
   RegisterEndAction,
   registerEndAction,
+  registerEndFailAction,
   RegisterEndFailAction,
   RegisterResponse,
   registerStartAction,
   requestActEndAction,
-  RequestActResponse,
+  requestActEnqueueAction, requestActQueueShiftEndAction,
+  RequestActQueueShiftEndAction,
+  RequestActQueueShiftStartAction,
+  requestActQueueShiftStartAction,
+  RequestActResponse, requestActStartAction,
   RequestActStartAction,
   updateWorldEndAction,
   UpdateWorldResponse,
@@ -53,10 +61,12 @@ import {
   UpdateWorldStartAction,
   User,
   WorldRequestEndNotLoggedInAction,
-  worldRequestEndNotLoggedInAction, worldRequestEndUserNotInRoomAction
+  worldRequestEndNotLoggedInAction,
+  worldRequestEndUserNotInRoomAction
 } from "../slices";
 import {Task} from 'redux-saga';
 import {RootState} from "../store";
+import {actionIds} from "./sagas-steven";
 
 export function* watchEnsureAuthStart() {
   yield takeLeading(
@@ -217,7 +227,8 @@ function* requestRegister() {
   const { response, errorResponse } : ApiOutcome<RegisterResponse>
     = yield call(register);
   if (!response) {
-    throw errorResponse
+    yield put(registerEndFailAction({ errorResponse }))
+    return
   }
   yield put(registerEndAction(response))
 }
@@ -318,7 +329,10 @@ function* initRoom(action: JoinRoomEndAction) {
     fork(repeatedlyRequestGetWorld, getWorldStartAction(action.payload.name), action.payload.updateFreqMs),
     fork(watchUpdateWorldStart),
     fork(repeatedlyRequestUpdateWorld, updateWorldStartAction(action.payload.name), action.payload.updateFreqMs),
-    fork(watchActionRequestStart, action.payload.updateFreqMs),
+    fork(watchActionRequestStart),
+    fork(watchActionQueueShiftStart),
+    fork(watchActionQueueShiftEnd),
+    fork(repeatedlyRequestActionQueueShiftStart, action.payload.updateFreqMs),
     fork(function*() {
       yield takeEvery(
         gameActionIds.navigateAwayFromRoom,
@@ -330,17 +344,50 @@ function* initRoom(action: JoinRoomEndAction) {
   ])
 }
 
-export function* watchActionRequestStart(intervalMs: number) {
-  yield throttle(
-    intervalMs,
+export function* repeatedlyRequestActionQueueShiftStart(intervalMs: number) {
+  while(true) {
+    yield put(requestActQueueShiftStartAction());
+    yield delay(intervalMs)
+  }
+}
+
+export function* watchActionQueueShiftStart() {
+  yield takeEvery(
+    gameActionIds.requestActQueueShiftStart,
+    function*() {
+      const actionHistory: ActionHistory = yield select((state: RootState) => state.game.actionQueue)
+      if (actionHistory.length) {
+        const head = actionHistory[0];
+        yield put(requestActQueueShiftEndAction({ log: head }))
+      }
+    }
+  )
+}
+
+export function* watchActionQueueShiftEnd() {
+  yield takeEvery(
+    gameActionIds.requestActQueueShiftEnd,
+    function*(action: RequestActQueueShiftEndAction) {
+      yield put(requestActStartAction(action.payload.log))
+    }
+  )
+}
+
+export function* watchActionRequestStart() {
+  yield takeEvery(
     gameActionIds.requestActStart,
     requestAct
   )
+  // yield throttle(
+  //   intervalMs,
+  //   gameActionIds.requestActStart,
+  //   requestAct
+  // )
 }
 
 function* requestAct(action: RequestActStartAction) {
   try {
-    const response: RequestActResponse = yield call(act, action.payload);
+    const response: RequestActResponse = yield call(act, action.payload.action);
     yield put(requestActEndAction(response));
   } catch(err) {
     console.error(err)
