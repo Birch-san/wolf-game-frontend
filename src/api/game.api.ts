@@ -3,7 +3,7 @@ import {
   GetMeResponse,
   GetWorldResponse,
   JoinRoomResponse,
-  LoginAction,
+  LoginAction, LoginRequest,
   LoginResponse,
   RegisterResponse,
   RequestActResponse,
@@ -42,8 +42,8 @@ function wrapOutcome<T, E = StandardError>(promise: Promise<AxiosResponse<T>>): 
 export const getMe = (): Promise<ApiOutcome<GetMeResponse>> =>
   wrapOutcome(apiClient.get(`auth/me`));
 
-export const login = (loginAction: LoginAction): Promise<ApiOutcome<LoginResponse>> =>
-  wrapOutcome(apiClient.post(`auth/login`, loginAction));
+export const login = (request: LoginRequest): Promise<ApiOutcome<LoginResponse>> =>
+  wrapOutcome(apiClient.post(`auth/login`, request));
 
 export const register = (): Promise<ApiOutcome<RegisterResponse>> =>
   wrapOutcome(apiClient.get(`auth/register`));

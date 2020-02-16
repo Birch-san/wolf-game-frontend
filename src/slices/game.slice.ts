@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {Namespacer} from "./Namespacer";
 import _ from "lodash";
+import {StandardError} from "../api";
 
 export interface Position {
   y: number
@@ -36,24 +37,30 @@ const namespace = 'game' as const
 const namespacer = new Namespacer(namespace)
 
 const actionIds = {
-  ensureInitialAuthStart:
-    namespacer.qualify('[0] ensureInitialAuthStart'),
-  ensureInitialAuthEnd:
-    namespacer.qualify('[1] ensureInitialAuthEnd'),
+  ensureAuthStart:
+    namespacer.qualify('[0] ensureAuthStart'),
+  ensureAuthEnd:
+    namespacer.qualify('[1] ensureAuthEnd'),
   getMeStart:
     namespacer.qualify('[0] getMeStart'),
   getMeEnd:
     namespacer.qualify('[1] getMeEnd'),
   getMeEndNotLoggedIn:
     namespacer.qualify('[2] getMeEndNotLoggedIn'),
+  worldRequestEndNotLoggedIn:
+    namespacer.qualify('worldRequestEndNotLoggedIn'),
   loginStart:
     namespacer.qualify('[2] loginStart'),
   loginEnd:
     namespacer.qualify('[3] loginEnd'),
+  loginEndFail:
+    namespacer.qualify('[3] loginEndFail'),
   registerStart:
     namespacer.qualify('[4] registerStart'),
   registerEnd:
     namespacer.qualify('[5] registerEnd'),
+  registerEndFail:
+    namespacer.qualify('[5] registerEndFail'),
   joinRoomStart:
     namespacer.qualify('[0] joinRoomStart'),
   joinRoomEnd:
@@ -289,25 +296,26 @@ export const joinRoomEndAction = (
   payload: response
 })
 
-export type InitialAuth
+export type Auth
   = GetMeResponse
+  | LoginResponse
   | RegisterResponse
-export type EnsureInitialAuthStartAction
+export type EnsureAuthStartAction
   = PayloadAction
 
-export const ensureInitialAuthStartAction = ():
-  EnsureInitialAuthStartAction => ({
-  type: actionIds.ensureInitialAuthStart,
+export const ensureAuthStartAction = ():
+  EnsureAuthStartAction => ({
+  type: actionIds.ensureAuthStart,
   payload: undefined
 })
 
-export type EnsureInitialAuthEndAction
-  = PayloadAction<InitialAuth>
+export type EnsureAuthEndAction
+  = PayloadAction<Auth>
 
-export const ensureInitialAuthEndAction = (
-  initialAuth: InitialAuth
-): EnsureInitialAuthEndAction => ({
-  type: actionIds.ensureInitialAuthEnd,
+export const ensureAuthEndAction = (
+  initialAuth: Auth
+): EnsureAuthEndAction => ({
+  type: actionIds.ensureAuthEnd,
   payload: initialAuth
 })
 
@@ -366,6 +374,20 @@ export const loginEndAction = (
   payload: response
 })
 
+export interface LoginEndFailPayload<T = StandardError> {
+  errorResponse: T
+  error: Error // just for stack trace
+}
+export type LoginEndFailAction<T = StandardError>
+  = PayloadAction<LoginEndFailPayload<T>>
+
+export const loginEndFailAction = <T = StandardError>(
+  payload: LoginEndFailPayload<T>
+): LoginEndFailAction<T> => ({
+  type: actionIds.loginEndFail,
+  payload
+});
+
 export type RegisterStartAction
   = PayloadAction;
 
@@ -388,6 +410,20 @@ export const registerEndAction = (
   type: actionIds.registerEnd,
   payload: response
 })
+
+export interface RegisterEndFailPayload<T = StandardError> {
+  errorResponse: T
+  error: Error // just for stack trace
+}
+export type RegisterEndFailAction<T = StandardError>
+  = PayloadAction<RegisterEndFailPayload<T>>
+
+export const registerEndFailAction = <T = StandardError>(
+  payload: RegisterEndFailPayload<T>
+): RegisterEndFailAction<T> => ({
+  type: actionIds.registerEndFail,
+  payload
+});
 
 interface NominalAction {
   time: string
@@ -433,3 +469,17 @@ export const navigateAwayFromRoomAction = (
   type: actionIds.navigateAwayFromRoom,
   payload: room
 });
+
+export interface WorldRequestEndNotLoggedInPayload<T = StandardError> {
+  errorResponse: T
+  error: Error // just for stack trace
+}
+export type WorldRequestEndNotLoggedInAction<T = StandardError>
+  = PayloadAction<WorldRequestEndNotLoggedInPayload<T>>
+
+export const worldRequestEndNotLoggedInAction = <T = StandardError>(
+  payload: WorldRequestEndNotLoggedInPayload<T>
+): WorldRequestEndNotLoggedInAction<T> => ({
+  type: actionIds.worldRequestEndNotLoggedIn,
+  payload
+})
