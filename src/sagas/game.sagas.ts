@@ -77,10 +77,13 @@ export function* watchEnsureAuthEnd() {
 export function* watchAuth() {
   yield all([
     fork(watchGetMeStart),
+    fork(watchGetMeEnd),
     // fork(watchGetMeEndNotLoggedIn),
     fork(watchWorldRequestEndNotLoggedIn),
     fork(watchLoginStart),
+    fork(watchLoginEnd),
     fork(watchRegisterStart),
+    fork(watchRegisterEnd),
     fork(watchEnsureAuthStart),
     fork(watchEnsureAuthEnd),
   ])
@@ -179,6 +182,19 @@ export function* requestGetMe() {
   }
 }
 
+export function* watchGetMeEnd() {
+  yield takeLatest(
+    gameActionIds.getMeEnd,
+    function(getMeEndAction: GetMeEndAction) {
+      if (getMeEndAction.payload.loggedIn) {
+        console.log("We have some credentials in our session already (i.e. we have registered/logged-in before, and have refreshed the page since then)")
+      } else {
+        console.log("We lack a session (i.e. it expired or this is our first time playing). Will need to register or login.")
+      }
+    }
+  )
+}
+
 // export function* watchGetMeEndNotLoggedIn() {
 //   yield takeLatest(
 //     gameActionIds.getMeEndNotLoggedIn,
@@ -231,12 +247,23 @@ function* requestLogin(loginAction: LoginAction) {
   yield put(loginEndAction(response))
 }
 
-// export function* watchRegisterEnd(intervalMs: number) {
-//   yield takeLatest(
-//     gameActionIds.registerEnd,
-//     watchRoomJoins.bind(null, intervalMs)
-//   )
-// }
+export function* watchLoginEnd() {
+  yield takeLatest(
+    gameActionIds.loginEnd,
+    function() {
+      console.log('Logged in')
+    }
+  )
+}
+
+export function* watchRegisterEnd() {
+  yield takeLatest(
+    gameActionIds.registerEnd,
+    function() {
+      console.log('Registered a new user')
+    }
+  )
+}
 
 export function* watchRoomJoins() {
   yield all([
