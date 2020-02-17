@@ -1,8 +1,8 @@
-import React, {KeyboardEventHandler, KeyboardEvent, MouseEventHandler} from "react";
+import React, {KeyboardEvent, KeyboardEventHandler, MouseEventHandler} from "react";
 import styles from './Controls.module.scss'
 import useEventListener from '@use-it/event-listener'
 import {RootState, useTypedDispatch} from "../store";
-import {Contiguous, eqGrid, eqHunters, eqWolves, Hunter, PlayerType, requestActStartAction, Wolf} from "../slices";
+import {Contiguous, eqHunters, eqWolves, Hunter, PlayerType, requestActStartAction, Wolf} from "../slices";
 import {useSelector} from "react-redux";
 
 export interface ControlProps {

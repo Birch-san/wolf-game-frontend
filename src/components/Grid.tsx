@@ -1,8 +1,9 @@
 import {useSelector} from "react-redux";
 import {RootState} from "../store";
 import React from "react";
-import './Grid.css';
+import styles from './Grid.module.scss';
 import {eqGrid, eqHunters, eqWolves, Hunter, Wolf} from "../slices";
+import {inspect} from "util";
 
 interface PositionProps {
   x: number
@@ -22,7 +23,7 @@ interface WolfTileProps extends PositionProps {
 
 const PlayerTile: React.FC<PositionProps> = ({ x, y, isYou, isAlive, children }) => {
   return (
-    <div className="player" style={{
+    <div className={`${styles.player} ${isYou ? styles.you : ''}`} style={{
       transform: `translate(${x}em, ${y}em)`
     }}>{children}</div>
   )
@@ -111,7 +112,7 @@ export const Grid: React.FC = () => {
         isYou={wolf.player.isYou}
         isAlive={wolf.player.alive}
       />)}
-      <table className="grid">
+      <table className={styles.grid}>
         <tbody>
         {
           grid.map((row, rowIx) => <tr key={rowIx}>
