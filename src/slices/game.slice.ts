@@ -3,6 +3,10 @@ import {Namespacer} from "./Namespacer";
 import _ from "lodash";
 import {StandardError} from "../api";
 
+export type PlayerType
+  = 'wolf'
+  | 'hunter'
+
 export interface Position {
   y: number
   x: number
@@ -21,16 +25,24 @@ export interface Entity {
 
 export interface Player {
   score: number
+  alive: boolean
+  respawnTicks: number
+  isYou: boolean
 }
 
 export interface Hunter {
   player: Player
   entity: Entity
+  petTicks: number
+  bitedTicks: number
+  reloadTicks: number
 }
 
 export interface Wolf {
   player: Player
   entity: Entity
+  biteTicks: number
+  pettedTicks: number
 }
 
 const namespace = 'game' as const
@@ -135,11 +147,24 @@ export function eqGrid(g1: Grid, g2: Grid): boolean {
 }
 
 export function eqHunter(h1: Hunter, h2: Hunter): boolean {
-  return eqEntity(h1.entity, h2.entity);
+  return eqEntity(h1.entity, h2.entity)
+  && eqPlayer(h1.player, h2.player)
+  && !!h1.petTicks === !!h2.petTicks
+  && !!h1.bitedTicks === !!h2.bitedTicks
 }
 
 export function eqWolf(w1: Wolf, w2: Wolf): boolean {
-  return eqEntity(w1.entity, w2.entity);
+  return eqEntity(w1.entity, w2.entity)
+  && eqPlayer(w1.player, w2.player)
+  && !!w1.pettedTicks === !!w2.pettedTicks
+  && !!w1.biteTicks === !!w2.biteTicks
+}
+
+export function eqPlayer(p1: Player, p2: Player): boolean {
+  return p1.isYou === p2.isYou
+  && p1.alive === p2.alive
+  && p1.respawnTicks === p2.respawnTicks
+  && p1.score === p2.score
 }
 
 /**
@@ -184,8 +209,8 @@ const slice = createSlice({
     user: null as User|null,
     password: null as string|null,
     world: {
-      wolves: [],
-      hunters: [],
+      wolves: [] as Wolf[],
+      hunters: [] as Hunter[],
     } as World,
   },
   reducers: {},
@@ -449,9 +474,17 @@ interface MoveAction extends NominalAction {
   x: Contiguous
   y: Contiguous
 }
+interface BiteAction extends NominalAction {
+  type: 'bite'
+}
+interface PetAction extends NominalAction {
+  type: 'pet'
+}
 
 export type GameAction
-  = MoveAction;
+  = MoveAction
+  | BiteAction
+  | PetAction;
 
 export type RequestActStartAction
   = PayloadAction<GameAction>;

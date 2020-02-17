@@ -1,8 +1,9 @@
 import React, {KeyboardEventHandler, KeyboardEvent, MouseEventHandler} from "react";
 import styles from './Controls.module.scss'
 import useEventListener from '@use-it/event-listener'
-import {useTypedDispatch} from "../store";
-import {Contiguous, requestActStartAction} from "../slices";
+import {RootState, useTypedDispatch} from "../store";
+import {Contiguous, eqGrid, eqHunters, eqWolves, Hunter, PlayerType, requestActStartAction, Wolf} from "../slices";
+import {useSelector} from "react-redux";
 
 export interface ControlProps {
   onClick: MouseEventHandler<HTMLButtonElement>
@@ -17,8 +18,12 @@ export interface ControlsProps {
   room: string
 }
 
-export const Controls: React.FC<ControlsProps> = ({room}) => {
+export const Controls: React.FC<ControlsProps> = ({ room}) => {
   const dispatch = useTypedDispatch();
+  const wolves = useSelector((state: RootState) => state.game.world.wolves, eqWolves);
+  const hunters = useSelector((state: RootState) => state.game.world.hunters, eqHunters);
+  const playerType: PlayerType|undefined = (wolves.find((wolf: Wolf) => wolf.player.isYou) && 'wolf')
+  || (hunters.find((hunter: Hunter) => hunter.player.isYou) && 'hunter');
   const requestMove = (x: Contiguous, y: Contiguous) => {
     dispatch(requestActStartAction({
       type: 'move',
@@ -27,7 +32,21 @@ export const Controls: React.FC<ControlsProps> = ({room}) => {
       x,
       y,
     }))
-  }
+  };
+  const requestBite = () => {
+    dispatch(requestActStartAction({
+      type: 'bite',
+      time: new Date().toISOString(),
+      room,
+    }))
+  };
+  const requestPet = () => {
+    dispatch(requestActStartAction({
+      type: 'pet',
+      time: new Date().toISOString(),
+      room,
+    }))
+  };
   const keyHandler: KeyboardEventHandler = ({ key }) => {
     let x: Contiguous = 0,
       y: Contiguous = 0;
@@ -58,6 +77,14 @@ export const Controls: React.FC<ControlsProps> = ({room}) => {
         <Control onClick={() => requestMove(0, 1)}>Down</Control>
       </div>
       <Control onClick={() => requestMove(1, 0)}>Right</Control>
+      {
+        playerType === 'wolf' &&
+        <Control onClick={requestBite}>Bite</Control>
+      }
+      {
+        playerType === 'hunter' &&
+          <Control onClick={requestPet}>Pet</Control>
+      }
     </div>
   )
 };
